@@ -1,0 +1,7 @@
+SECRET_KEY='django-insecure-8)a3y+c^i&lr+*@(g!ue3a_r*%#4wmuu*c4*jwxlgyo*89g8nh'
+DEBUG=True
+ALLOWED_HOSTS='127.0.0.1'
+EMAIL_HOST_USER='worksperforms@gmail.com'
+EMAIL_HOST_PASSWORD='fkbc zmsx xtwn jdnw'
+CORS_ALLOWED_ORIGINS=http://localhost:3000,http://localhost:5173
+RESET_URL='http://localhost:5173/reset/password'
