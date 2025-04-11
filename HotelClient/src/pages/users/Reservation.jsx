@@ -65,6 +65,7 @@ export default function Reservation() {
         toast.success("Reservation enregistrer!!")
         toast.info("vous avez 12 heures pour effectuer le paiment")
         navigate("/moncompte/reservations")
+        window.location.reload();
     } catch (error) {
         if(error.response && error.response.data){
             Object.keys(error.response.data).forEach(field => {

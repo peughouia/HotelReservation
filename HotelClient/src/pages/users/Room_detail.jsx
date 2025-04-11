@@ -22,7 +22,6 @@ export default function Room_detail() {
     const[comments, setComments] = useState([]);
     const images = rooms.images;
     const [comment, setComment] = useState('')
-
     const [rating, setRating] = useState(0);
 
   const handleSubmit = async () => {
@@ -44,12 +43,12 @@ export default function Room_detail() {
     const fetchrooms = async () => {
         const response  = await axios.get(`/editRoom/${roomValue}/`);
           setRoom(response.data);
-      }; 
+    }; 
       
-      const fetchComment = async () => {
+    const fetchComment = async () => {
         const response  = await axios.get(`/rooms/${roomValue}/comments/`);
-          setComments(response.data);
-      };
+        setComments(response.data);
+    };
       
     useEffect(() => {
         fetchComment();

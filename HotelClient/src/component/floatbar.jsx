@@ -37,8 +37,7 @@ export default function Floatbottombar() {
 
             
             </div>
-
-            
+          
         ):(
             <Link to={"/Connexion"} className="flex flex-col items-center p-1">
             <img src={connexion} className="w-6 h-6" alt="Logo" />

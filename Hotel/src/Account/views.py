@@ -4,10 +4,13 @@ import qrcode
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django.utils.timezone import now
+from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4
+from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib.utils import ImageReader
 from reportlab.pdfgen import canvas
-from rest_framework import status
+from reportlab.platypus import Table, TableStyle
+from rest_framework import status, generics
 from rest_framework.generics import GenericAPIView, RetrieveAPIView
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -15,11 +18,11 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from Account.models import CustomUser, Category, Room, Reservation, Review, Comment
+from Account.models import CustomUser, Category, Room, Reservation, Review, Comment, Favorite
 from Account.serializers import UserRegistrationSerialiser, CustomUserSerializer, UserLoginSerializer, \
     PasswordChangeSerializer, PasswordResetSerializer, PasswordResetConfirmSerializer, CategorySerializer, \
     RoomSerializer, ReservationSerializer, ReviewSerializer, CommentSerializer, CommentsSerializer, \
-    ReservationsSerializer, DetailReservationSerializer
+    ReservationsSerializer, DetailReservationSerializer, FavoriteSerializer
 
 
 # Create your views here.
@@ -84,7 +87,7 @@ class UserLogoutAPIView(APIView):
 
 
 class UsersAPIView(APIView):
-    permission_classes = (AllowAny,)
+    permission_classes = [IsAuthenticated]
 
     def get(self, request):
         user = CustomUser.objects.all()
@@ -96,9 +99,10 @@ class UsersAPIView(APIView):
         user.delete()
         return Response({"message": "user supprimé avec succès"}, status=status.HTTP_204_NO_CONTENT)
 
-    def patch(self, request, pk):
+    def patch(self, request):
         # Pour des mises à jour partielles
-        user = get_object_or_404(CustomUser, pk=pk)
+        user = request.user
+        # user = get_object_or_404(CustomUser, pk=pk)
         serializer = CustomUserSerializer(user, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
@@ -282,6 +286,14 @@ class CreateReservationView(APIView):
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+    def delete(self, request, slug):
+        try:
+            reservation = Reservation.objects.get(slug=slug)
+            reservation.delete()
+            return Response({'success': 'suppression'}, status=status.HTTP_204_NO_CONTENT)
+        except Exception as e:
+            return Response({'erreur': f'Erreur lors de la suppression : {str(e)}'}, status=status.HTTP_400_BAD_REQUEST)
+
 
 class GetAllReservation(APIView):
     permission_classes = [IsAuthenticated]
@@ -459,38 +471,112 @@ class RoomAvailabilityAPIView(APIView):
                                                                                                              'status',
                                                                                                              'id')
             return Response(reservations, status=status.HTTP_200_OK)
-        except Room.DoesNotExist:
+        except Room:
             return Response({"error": "Chambre non trouvée"}, status=status.HTTP_404_NOT_FOUND)
 
 
 def generate_pdf(request, reservation_id):
     reservation = get_object_or_404(Reservation, id=reservation_id)
-
     # Définir la réponse HTTP en tant que fichier PDF
     response = HttpResponse(content_type='application/pdf')
-    response['Content-Disposition'] = f'attachment; filename="recu_reservation_{reservation.id}.pdf"'
+    response[
+        'Content-Disposition'] = f'attachment; filename=f"recu_Room{reservation.room.category.name}_{reservation.room.room_number}.pdf"'
 
     # Créer un PDF avec ReportLap
 
     pdf = canvas.Canvas(response, pagesize=A4)
-    pdf.setTitle(f'Reçu Réservation {reservation.id}')
+    width, height = A4
+    styles = getSampleStyleSheet()
+    pdf.setTitle("Réservation - Hotel")
 
-    # Ajouter du texte au PDF
-    pdf.setFont("Helvetica-Bold", 16)
-    pdf.drawString(200, 800, "Reçu de Réservation")
+    # Ajouter un logo (ex: logo.png)
+    logo_path = "Reservia.png"  # chemin du logo
+    logo_width = 90
+    logo_height = 90
+    pdf.drawImage(logo_path, 40, height - 100, width=logo_width, height=logo_height, mask='auto')
 
-    pdf.setFont("Helvetica", 12)
-    pdf.drawString(100, 750, f"Numéro de réservation: {reservation.id}")
-    pdf.drawString(100, 730, f"Nom du client: {reservation.user.first_name}")
-    pdf.drawString(100, 710, f"Chambre réservée: {reservation.room.room_number}")
-    pdf.drawString(100, 690, f"Date d'arrivée: {reservation.check_in}")
-    pdf.drawString(100, 670, f"Date de départ: {reservation.check_out}")
-    pdf.drawString(100, 650, f"Montant payé: {reservation.total_price} FCFA")
+    # Titre après le logo
+    pdf.setFont("Helvetica-Bold", 30)
+    pdf.setFillColor(colors.orange)
+    pdf.drawString(130, height - 70, "RESERVIA")  # décalé à droite
+    pdf.setFillColor(colors.black)
+
+    # Infos client & réservation
+    pdf.setFont("Helvetica-Bold", 10)
+    left_x = 40
+    right_x = 320
+    top_y = height - 150
+    line_gap = 50
+
+    infos = [
+        ("NOM DU CLIENT:", f"{reservation.user.first_name} {reservation.user.last_name}"),
+        ("ADRESSE POSTALE:", reservation.user.addressPostal if reservation.user.addressPostal else "RAS"),
+        ("VILLE:", reservation.user.ville if reservation.user.ville else "RAS"),
+        ("ADDRESS MAIL:", reservation.user.email),
+        ("DATE D'ARRIVÉE:", f"{reservation.check_in.date()}"),
+        ("HEURE D'ARRIVÉE:", f"{reservation.check_in.time()}"),
+    ]
+
+    infos_right = [
+        ("N° DE REÇU:", f"rcpt {reservation.created_at.year}{reservation.room.room_number}{reservation.user.id}"),
+        ("N° DE CHAMBRE:", reservation.room.room_number),
+        ("CODE DE RÉDUCTION:", "SPRING15"),
+        ("NUM TÉLÉPHONE:", reservation.user.phone),
+        ("DATE DE DÉPART:", f"{reservation.check_out.date()}"),
+        ("HEURE DE DÉPART:", f"{reservation.check_out.time()}"),
+    ]
+
+    for i, ((labelL, valueL), (labelR, valueR)) in enumerate(zip(infos, infos_right)):
+        y = top_y - i * line_gap
+        pdf.setFont("Helvetica-Bold", 10)
+        pdf.drawString(left_x, y, labelL)
+        pdf.setFont("Helvetica", 13)
+        pdf.drawString(left_x + 115, y, valueL)
+        pdf.setFont("Helvetica-Bold", 10)
+        pdf.drawString(right_x, y, labelR)
+        pdf.setFont("Helvetica", 13)
+        pdf.drawString(right_x + 135, y, valueR)
+
+    data = [
+        ["DATE DE FACTURATION", "DESCRIPTION", "QTÉ", "MONTANT/Nuit", "TOTAL"],
+        [f"{reservation.created_at.date()}", f"Chambre {reservation.room.category}", "1",
+         reservation.room.price_per_night, reservation.total_price],
+    ]
+
+    table = Table(data, colWidths=[140, 125, 55, 90, 80])
+    table.setStyle(TableStyle([
+        ("BACKGROUND", (0, 0), (-1, 0), colors.grey),
+        ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
+        ("ALIGN", (2, 1), (-1, -1), "CENTER"),
+        ("GRID", (0, 0), (-1, -1), 0.5, colors.black),
+        ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+        ("FONTNAME", (0, 1), (-1, -1), "Helvetica"),
+    ]))
+    table.wrapOn(pdf, width, height)
+    table.drawOn(pdf, 40, 300)
+
+    # Sous-total, taxe, total
+    pdf.setFont("Helvetica", 10)
+    pdf.drawString(350, 280, "SOUS-TOTAL:")
+    pdf.drawRightString(520, 280, f"{reservation.total_price} FCFA")
+
+    pdf.drawString(350, 265, "TAXE:")
+    pdf.drawRightString(520, 265, "0 FCFA")
+
+    pdf.setFont("Helvetica-Bold", 11)
+    pdf.drawString(350, 250, "TOTAL:")
+    pdf.drawRightString(520, 250, f"{reservation.total_price} FCFA")
+
+    pdf.setFont("Helvetica", 10)
+    pdf.drawString(350, 235, "MONTANT PAYÉ:")
+    pdf.drawRightString(520, 235, f"{reservation.total_price} FCFA")
+
+    pdf.drawString(350, 220, "MONTANT DÛ:")
+    pdf.drawRightString(520, 220, "0 FCFA")
 
     # Générer un QR Code contenant l'URL de confirmation ou l'ID de réservation
-    qr_data = f"http://127.0.0.1:8000/api/reservations/{reservation.id}/verify/"
+    qr_data = f"http://192.168.1.110:5173/moncompte/detail/{reservation.slug}"
     qr = qrcode.make(qr_data)
-
     # Convertir l'image du QR Code en un format compatible avec ReportLab
     qr_buffer = BytesIO()
     qr.save(qr_buffer, format="PNG")
@@ -498,12 +584,41 @@ def generate_pdf(request, reservation_id):
     qr_image = ImageReader(qr_buffer)
 
     # Ajouter le QR Code au PDF
-    pdf.drawImage(qr_image, 400, 600, width=100, height=100)  # Position et taille du QR code
+    pdf.drawImage(qr_image, 460, height - 100, width=90, height=90)  # Position et taille du QR code
 
     pdf.setFont("Helvetica", 10)
-    pdf.drawString(380, 580, "Scannez ce QR Code pour vérifier la réservation")
+    pdf.drawString(475, height - 105, "Scannez MOI")
 
+    pdf.setFont("Helvetica-Bold", 15)
+    pdf.setFillColor(colors.orange)
+    pdf.drawCentredString(width / 2, 80, "Reservia")
+    pdf.setFont("Helvetica", 9)
+    pdf.drawCentredString(width / 2, 65, "ADRESSE DE L’HÔTEL, VILLE, ÉTAT ET CODE POSTAL")
+    pdf.drawCentredString(width / 2, 50,
+                          "Tél: 321-456-7890 | e-mail: reservations@hotelname.com | site Web: hotelname.com")
+
+    # Sauvegarder
     pdf.showPage()
     pdf.save()
 
     return response
+
+
+class FavoriteListCreateAPIView(generics.ListCreateAPIView):
+    serializer_class = FavoriteSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return Favorite.objects.filter(user=self.request.user)
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+
+
+class FavoriteDeleteAPIView(generics.DestroyAPIView):
+    serializer_class = FavoriteSerializer
+    permission_classes = [IsAuthenticated]
+    lookup_field = 'room_id'
+
+    def get_queryset(self):
+        return Favorite.objects.filter(user=self.request.user)

@@ -6,7 +6,7 @@ from django.db.models import Avg
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from rest_framework import serializers
 
-from Account.models import CustomUser, Category, RoomImage, Room, Reservation, Review, Comment
+from Account.models import CustomUser, Category, RoomImage, Room, Reservation, Review, Comment, Favorite
 
 User = get_user_model()
 
@@ -14,7 +14,7 @@ User = get_user_model()
 class CustomUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomUser
-        fields = ('id', 'email', 'first_name', 'last_name', 'phone', 'is_staff')
+        fields = ('id', 'email', 'first_name', 'last_name','ville', 'phone', 'addressPostal', 'is_staff')
 
 
 # serialiser les données de l'user lors de l'enregistrement
@@ -216,3 +216,10 @@ class CommentsSerializer(serializers.ModelSerializer):
     class Meta:
         model = Comment
         fields = ['id', 'user', 'room', 'comment', 'created_at']
+
+
+class FavoriteSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Favorite
+        fields = ['id', 'user', 'room', 'added_at']
+        read_only_fields = ['user']  # 🟢 Empêche l’utilisateur de fournir ce champ

@@ -39,6 +39,9 @@ urlpatterns = ([
 
     path('rooms/<slug:slug>/reviews/', ReviewAPIView.as_view(), name='room-reviews'),
     path('rooms/<slug:slug>/comments/', CommentAPIView.as_view(), name='room-comments'),
+    path('favorites/', FavoriteListCreateAPIView.as_view(), name='room-comments'),
+    path('favorites/<int:room_id>/', FavoriteDeleteAPIView.as_view(), name='room-comments'),
+
 
 
 ])

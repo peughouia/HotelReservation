@@ -5,6 +5,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 const RoomCarousel = ({ room }) => {
   const images = room.images;
   const baseUrlImage = "http://192.168.1.110:8000";
+  //const baseUrlImage = "http://127.0.0.1:8000";
   const [imageIndex, setImageIndex] = useState(0);
 
   if (!images || images.length === 0) {

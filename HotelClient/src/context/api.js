@@ -1,7 +1,8 @@
 import axios from "axios";
 // ✅ Création d'une instance Axios
 const api = axios.create({
-  //baseURL: "http://127.0.0.1:8000/api",  // 🔹 Remplace par ton URL
+  //baseURL: "http://127.0.0.1:8000/api",
+  //baseUrlImage: "http://127.0.0.1:8000",
   baseURL: "http://192.168.1.110:8000/api",
   baseUrlImage: "http://192.168.1.110:8000",
 });
@@ -30,7 +31,6 @@ const refreshAccessToken = async () => {
 // ✅ Intercepter les requêtes et ajouter le token
 api.interceptors.request.use(async (config) => {
   let token = localStorage.getItem("accessToken");
-
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }

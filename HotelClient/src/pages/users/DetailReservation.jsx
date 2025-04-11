@@ -15,6 +15,8 @@ export default function DetailReservation() {
   const { reserveValue } = useParams();
   const [reservations, setReservation] = useState([])
   const [modalOpen, setModalOpen] = useState(false);
+  const [modalDeleteOpen, setModalDeleteOpen] = useState(false);
+  const [modalDownloadOpen, setModalDownloadOpen] = useState(false);
 
 
   const handleSend = (reservation) => {
@@ -47,6 +49,54 @@ export default function DetailReservation() {
     e.preventDefault();
     setModalOpen(true);
   };
+
+  const handleDelete = (e) => {
+    e.preventDefault();
+    setModalDeleteOpen(true);
+  }
+
+  const downloadsReceipt = (e) => {
+    e.preventDefault();
+    setModalDownloadOpen(true);
+  }
+
+  const downloadReceipt = async (ReservationId, filename) => {
+    try {
+      const response = await axios.get(`reservations/${ReservationId}/pdf/`, { responseType: 'blob' });
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `recu_${filename}.pdf`); // Nom du fichier
+      document.body.appendChild(link);
+      link.click();
+      toast.success("Lancement du Téléchargement réussi !");
+    } catch (error) {
+      if(response.status === 200){
+        toast.success("Lancement du Téléchargement réussi !");
+      }
+      toast.error("Erreur lors du téléchargement.");
+    }finally{
+      setModalDownloadOpen(false);
+    }
+  }
+
+  const deleteReservation = async (slugReservation) => {
+    try {
+      const response = await axios.delete(`/reservations/create/${slugReservation}/`);
+      if (response.status === 204) {
+        fetchreservation();
+        navigate("/moncompte/reservations")
+        window.location.reload();
+        toast.success("Réservation supprimée avec succès !");
+      } else {
+        toast.error("Erreur lors de la suppression de la réservation.");
+      }
+    } catch (error) {
+      toast.error("Erreur lors de la suppression de la réservation.");
+    }
+  }
+
+
 
   const handleCancel = async (reservation) => {
     const response = await axios.post(`/reservations/${reservation.slug}/cancel/`);
@@ -89,20 +139,30 @@ export default function DetailReservation() {
                       {reservation.user.first_name}
                   </h3>
                   <p className="text-gray-500 text-sm">
-                  {reservation.user.email}
+                      {reservation.user.email}
                   </p>
           </div>
-          {reservation.status === "confirmed" ? (
-              <div className="w-1/2 flex flex-col justify-end items-end">
-                  <FaDownload size={35} className='text-orange-500'/>
-              </div>
-          ):
-          (<p></p>)}
+          {reservation?(
+            <div className="flex justify-end items-end w-1/2">
+              {reservation.status === "confirmed" ? (
+                <button onClick={downloadsReceipt} className="">
+                    <FaDownload size={35} className='text-green-500'/>
+                </button>
+              ):<span></span>}
+
+              {reservation.status === "cancelled" ? (
+                <button onClick={handleDelete} className="">
+                  <FaTrash size={35} className='text-red-500'/>
+                </button>
+              ):<span></span>}
+
+            </div>
+          ):<span></span>
+          }
           
         </div>
 
         {/* Statut de la réservation */}
-
         <div className={`mt-3 px-4 py-2 text-center font-bold rounded-full ${getStatusColor(reservation.status)}`}>
               <p> {reservation.status}</p>
         </div>
@@ -223,6 +283,22 @@ export default function DetailReservation() {
           onConfirm={() => handleCancel(reservation)}
           title="Annuler la réservation"
           message={`Voulez-vous vraiment annuler la réservation ?`}
+        />
+
+        <Modal
+          isOpen={modalDeleteOpen}
+          onClose={() => setModalDeleteOpen(false)}
+          onConfirm={() => deleteReservation(reservation.slug)}
+          title="Supprimer la réservation"
+          message={`Voulez-vous vraiment supprimer la réservation ?`}
+        />
+
+        <Modal
+          isOpen={modalDownloadOpen}
+          onClose={() => setModalDownloadOpen(false)}
+          onConfirm={() => downloadReceipt(reservation.id, `Room${reservation.room.category.name}_${reservation.room.room_number}`)}
+          title="Telecharger Recu de la réservation"
+          message={`Voulez-vous vraiment télécharger la réservation ?`}
         />
       </div>
       ))} 

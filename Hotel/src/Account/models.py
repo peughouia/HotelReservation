@@ -39,6 +39,9 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
 
+    addressPostal = models.CharField(max_length=150, blank=True, null=True)
+    ville = models.CharField(max_length=150, blank=True, null=True)
+
     objects = CustomUserManager()
 
     USERNAME_FIELD = "email"
@@ -81,6 +84,18 @@ class Room(models.Model):
         return f"Room {self.room_number} ({self.category.name})"
 
 
+class Favorite(models.Model):
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
+    room = models.ForeignKey(Room, on_delete=models.CASCADE)
+    added_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('user', 'room')  # Un utilisateur ne peut pas avoir la même chambre en favori deux fois
+
+    def __str__(self):
+        return f"{self.user.username} - {self.room.room_number}"
+
+
 def upload_path(instance, filename):
     """
     Fonction qui génère dynamiquement le chemin d'upload des images
@@ -110,8 +125,8 @@ class Reservation(models.Model):
     ]
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
     room = models.ForeignKey(Room, on_delete=models.CASCADE)
-    check_in = models.DateField()
-    check_out = models.DateField()
+    check_in = models.DateTimeField()
+    check_out = models.DateTimeField()
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='pending')
     completed = models.CharField(max_length=10, choices=STATUS_CHOICES, default='pending')
     created_at = models.DateTimeField(auto_now_add=True)

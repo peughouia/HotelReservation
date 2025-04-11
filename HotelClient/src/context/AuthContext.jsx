@@ -44,6 +44,12 @@ const fetchrooms = async () => {
   return data;
 };
 
+const fetchFavorite = async () => {
+  const token = localStorage.getItem("accessToken");
+  const { data } = await axios.get("/favorites/");
+  return data;
+};
+
 
 
 export const AuthProvider = ({ children }) => {
@@ -97,6 +103,11 @@ export const AuthProvider = ({ children }) => {
     retry: false,
   })
 
+  const {data: favorites, refetch} = useQuery({
+    queryKey: ["favorites"],
+    queryFn: fetchFavorite,
+  })
+
 
   
   // ✅ Connexion : Stocker le token et le refresh_token
@@ -145,7 +156,7 @@ export const AuthProvider = ({ children }) => {
 
   return (
     <AuthContext.Provider value={{user, isLoading, loginMutation, logout, categories,
-     rooms, reservations, setRedirectAfterLogin, UserReservations}}>
+     rooms, reservations, setRedirectAfterLogin, UserReservations, favorites, refetch}}>
       {children}
     </AuthContext.Provider>
   );

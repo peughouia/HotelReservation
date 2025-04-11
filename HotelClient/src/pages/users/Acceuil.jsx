@@ -5,35 +5,21 @@ import { faStar } from "@fortawesome/free-solid-svg-icons";
 import { useAuth } from '../../context/AuthContext';
 import Floatbottombar from '../../component/floatbar';
 import RoomCarousel from '../../component/carroussel';
+import { toast } from 'react-toastify';
+import axios from '../../context/api'
+import FavoritButton from '../../component/FavoritButton';
 
 
 export default function Acceuil() {
 
-  
-  const { user, isLoading, isError, categories, rooms } = useAuth();
- 
-         if (isLoading) {
-          return (<div className='w-full h-screen flex justify-center items-center'>
-            <l-reuleaux
-            size="100"
-            stroke="15"
-            stroke-length="0.25"
-            bg-opacity="0.3"
-            speed="1.3" 
-            color="orange" 
-          >
-          </l-reuleaux>
-          </div>);
-         }
-     
+  const token = localStorage.getItem("accessToken")
+  const { user, isLoading, isError, categories, rooms,favorites, refetch } = useAuth();
          if (isError) {
              return <p>Erreur de chargement</p>;
          }
   
-
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [search, setSearch] = useState('');
-
   const [priceRange, setPriceRange] = useState(50000); // Prix max sélectionné
 
   const handleResetFilter = () => {
@@ -43,7 +29,7 @@ export default function Acceuil() {
   };
 
   // Filtrer les chambres selon la catégorie sélectionnée et le prix max
-  if (!rooms){
+  if (!rooms || isLoading) {
     return (<div className='w-full h-screen flex justify-center items-center'>
       <l-reuleaux
       size="100"
@@ -55,13 +41,19 @@ export default function Acceuil() {
     >
     </l-reuleaux>
     </div>);
-  } 
+  }
 
   const filteredRooms = rooms.filter((room) => {
     const isCategoryMatch = selectedCategory ? room.category.name === selectedCategory : true;
     const isPriceMatch = room.price_per_night <= priceRange;
     return isCategoryMatch && isPriceMatch;
   });
+
+
+const isRoomFavorited = (roomId) => {
+  return favorites?.some((fav) => fav.room === roomId);
+};
+
 
   return (
     <div className='h-full w-screen p-3 flex flex-col '>
@@ -123,8 +115,12 @@ export default function Acceuil() {
                 <div className='font-bold text-2xl'>Room {room.room_number}</div>
                 <div className='text-lg'>{room.rating<1?<span>Pas de note</span>:<span>Notée {room.rating} <FontAwesomeIcon icon={faStar} className='text-green-600' /></span>}</div>
               </div>
-              <div className='text-2xl text-gray-500 mb-1'> 
-                <span className='font-bold'>{room.category.name}</span> Room
+              <div className='text-2xl flex justify-between text-gray-500 mb-1 '> 
+                <div><span className='font-bold'>{room.category.name}</span> Room</div>
+                <div className='flex items-center'>
+                  {token?(<FavoritButton roomId={room.id} isFavorited={isRoomFavorited(room.id)} onToggle={refetch}/>)
+                  :(<div></div>)}
+                </div>
               </div>
               <div className='text-xl text-gray-500 '> Actuellement {room.is_available?
                 <div className="badge badge-success text-xl font-semibold text-white">Libre</div>
@@ -135,13 +131,14 @@ export default function Acceuil() {
                 <div>
                 <span className='font-bold'>{room.price_per_night} FCFA</span> par Nuit
                 </div>
+                
                 <div>
                   <Link to={`/detail/${room.slug}`}><button className="btn bg-orange-500 text-white text-xl">Voir</button></Link>
                 </div>
               </div>
             </div>
           </div>
-        ))): <div className='w-full h-screen flex justify-center mt-10 font-bold text-2xl'>
+        ))): <div className='w-full h-screen flex justify-center mt-10 text-gray-500 font-bold text-2xl'>
               <p>Aucune chambre trouvée</p>
           </div>}
       </div>

@@ -70,6 +70,7 @@ export default function ReservationForm({roomSlug, existingReservation = null })
         toast.info("Vous avez 12 heures pour effectuer le paiement.");
       }
       navigate("/moncompte/reservations");
+      window.location.reload();
     } catch (error) {
       if (error.response && error.response.data) {
         Object.values(error.response.data).forEach((err) => {

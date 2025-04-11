@@ -39,7 +39,6 @@ export default function Compte() {
              <span className="text-lg font-semibold">Accueil</span>
             </Link>
             <div className="min-h-screen bg-gray-100 p-4">
-                <h1 className="text-2xl font-semibold mb-4 text-center text-gray-500">Mon Compte</h1>
           {/* Profil */}
           <div className="flex items-center space-x-4 bg-white p-4 rounded-lg shadow-md justify-around">
             <img src={avatar} alt="Avatar" className="w-16 h-16 rounded-full border" />
@@ -48,7 +47,7 @@ export default function Compte() {
               <p className="text-gray-600 text-sm">{user.email}</p>
               <p className="text-gray-600 text-sm">{user.phone}</p>
             </div>
-            <Link to="/edit-profile" className="ml-auto text-orange-500 text-lg">
+            <Link to="/moncompte/editUser" className="ml-auto text-orange-500 text-lg">
               <FaUserEdit size={34} />
             </Link>
           </div>
@@ -56,14 +55,14 @@ export default function Compte() {
           {/* Menu */}
           <div className="mt-6 space-y-4">
             {menuItems.map((item, index) => (
-              <Link
+              <button
                 key={index}
-                to={item.path}
-                className="flex items-center p-4 bg-white rounded-lg shadow-md hover:bg-gray-200 transition"
+                onClick={() => window.location.href = item.path}
+                className="flex items-center p-4 bg-white rounded-lg shadow-md w-full hover:bg-gray-200 transition"
               >
                 <div className="text-orange-500 text-xl mr-4">{item.icon}</div>
                 <span className="text-lg font-medium">{item.title}</span>
-              </Link>
+              </button>
             ))}
           </div>
     

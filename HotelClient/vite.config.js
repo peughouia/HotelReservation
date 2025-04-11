@@ -8,6 +8,5 @@ export default defineConfig({
     open: true,
     host: '0.0.0.0', // Écoute sur toutes les interfaces
     port: 5173,      // Port par défaut (vous pouvez le changer si besoin)
-    
   },
 })
