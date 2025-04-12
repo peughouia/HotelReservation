@@ -5,8 +5,6 @@ import { faStar } from "@fortawesome/free-solid-svg-icons";
 import { useAuth } from '../../context/AuthContext';
 import Floatbottombar from '../../component/floatbar';
 import RoomCarousel from '../../component/carroussel';
-import { toast } from 'react-toastify';
-import axios from '../../context/api'
 import FavoritButton from '../../component/FavoritButton';
 
 
@@ -14,9 +12,9 @@ export default function Acceuil() {
 
   const token = localStorage.getItem("accessToken")
   const { user, isLoading, isError, categories, rooms,favorites, refetch } = useAuth();
-         if (isError) {
-             return <p>Erreur de chargement</p>;
-         }
+    if (isError) {
+        return <p>Erreur de chargement</p>;
+    }
   
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [search, setSearch] = useState('');
@@ -98,7 +96,6 @@ const isRoomFavorited = (roomId) => {
           </div>
         ))): <p>loading...</p>}
       </div>
-
       </div>
 
       

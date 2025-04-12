@@ -1,12 +1,14 @@
-import {React,useState,useEffect} from 'react'
+import {React,useState,useEffect,forwardRef} from 'react'
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import axios from '../../context/api'
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { format } from "date-fns";
+import { addHours  } from "date-fns";
 import { toast } from 'react-toastify';
 import back from '../../assets/back.png'
 import Modal from '../../component/modal';
+
+
 
 
 export default function Reservation() {
@@ -52,12 +54,15 @@ export default function Reservation() {
     alert("Veuillez sélectionner des dates valides.");
     return;
     }
-    const formattedCheckIn = format(checkIn, "yyyy-MM-dd");
-    const formattedCheckOut = format(checkOut, "yyyy-MM-dd");
+
+    const adjustedCheckIn = addHours(checkIn, 1);
+    const adjustedCheckOut = new Date(checkOut);
+    adjustedCheckOut.setHours(adjustedCheckIn.getHours());
+    adjustedCheckOut.setMinutes(adjustedCheckIn.getMinutes());
 
     const reservationData = {
-    check_in: formattedCheckIn,
-    check_out: formattedCheckOut,
+    check_in: adjustedCheckIn.toISOString(),
+    check_out: adjustedCheckOut.toISOString(),
     };
   
     try {
@@ -95,9 +100,13 @@ export default function Reservation() {
         onChange={(date) => setCheckIn(date)}
         minDate={new Date()} // Pas de date passée
         excludeDates={bookedDates} // Bloquer les dates déjà réservées
-        dateFormat="yyyy-MM-dd"
+        showTimeSelect
+        dateFormat="Pp" 
         className="p-2 border rounded w-full"
         placeholderText='Selectionnez une date'
+        timeFormat="HH:mm" // Format de l'heure
+        timeIntervals={15} // Intervalles d’heure (par défaut : 30min)
+        timeCaption="Heure"
         required
       />
       <label className="block mt-4 mb-2 font-bold text-xl text-gray-500">Date de sortie :</label>
@@ -107,10 +116,13 @@ export default function Reservation() {
         minDate={checkIn || new Date()} // Bloquer les dates avant check-in
         excludeDates={bookedDates} // Bloquer les dates déjà réservées
         dateFormat="yyyy-MM-dd"
-        className="p-2 border rounded-sm w-full"
+        className="p-2 border rounded w-full"
         placeholderText='Selectionnez une date'
         required
       />
+
+      
+
       <button type="submit" className="btn btn-success mt-4 text-white text-xl px-4 py-2 rounded">
         Réserver
       </button>
@@ -121,7 +133,7 @@ export default function Reservation() {
         onClose={() => setModalOpen(false)}
         onConfirm={confirmReservation}
         title="Confirmer la réservation"
-        message={`Voulez-vous vraiment réserver la chambre du ${checkIn?.toLocaleDateString()} au ${checkOut?.toLocaleDateString()} ?`}
+        message={`Voulez-vous vraiment réserver la chambre du ${checkIn?.toLocaleDateString()} à ${checkIn?.getHours()}h au ${checkOut?.toLocaleDateString()} ?`}
         />
     </div>
   );

@@ -44,6 +44,13 @@ const fetchrooms = async () => {
   return data;
 };
 
+const fetchFavoriteRoom = async () => {
+  const token = localStorage.getItem("accessToken"); 
+  if (!token) return null;
+  const { data } = await axios.get("/user/favorites/Room/");
+  return data;
+}
+
 const fetchFavorite = async () => {
   const token = localStorage.getItem("accessToken");
   const { data } = await axios.get("/favorites/");
@@ -95,6 +102,14 @@ export const AuthProvider = ({ children }) => {
     retry: false,
   });
 
+  const { data: UserFavRooms } = useQuery({
+    queryKey: ["UserFavRooms"],
+    queryFn: fetchFavoriteRoom,
+    staleTime: 10 * 60 * 1000,
+    cacheTime: 30 * 60 * 1000,
+    retry: false,
+  });
+
   const {data: reservations} = useQuery({
     queryKey: ["reservations"],
     queryFn: fetchReservation,
@@ -119,6 +134,7 @@ export const AuthProvider = ({ children }) => {
         localStorage.setItem("accessToken", response.data.tokens.access);
         localStorage.setItem("refreshToken", response.data.tokens.refresh);
         navigate(redirectAfterLogin, { replace: true });
+        window.location.reload();
         return response.data;
         
       } catch(error) {
@@ -156,7 +172,7 @@ export const AuthProvider = ({ children }) => {
 
   return (
     <AuthContext.Provider value={{user, isLoading, loginMutation, logout, categories,
-     rooms, reservations, setRedirectAfterLogin, UserReservations, favorites, refetch}}>
+     rooms, reservations, setRedirectAfterLogin, UserReservations, favorites, refetch, UserFavRooms}}>
       {children}
     </AuthContext.Provider>
   );

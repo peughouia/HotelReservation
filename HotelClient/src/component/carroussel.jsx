@@ -12,6 +12,14 @@ const RoomCarousel = ({ room }) => {
     return <p>Aucune image disponible pour cette chambre.</p>;
   }
 
+  const getImageSrc = (imagePath) => {
+    if (!imagePath) return ''; // si l'image n'existe pas
+  
+    // Vérifie si le chemin est déjà une URL complète
+    const isFullUrl = imagePath.startsWith('http://') || imagePath.startsWith('https://');
+    return isFullUrl ? imagePath : baseUrlImage + imagePath;
+  };
+
   const prevImage = () => {
     setImageIndex((prev) => (prev === 0 ? images.length - 1 : prev - 1));
   };
@@ -26,7 +34,7 @@ const RoomCarousel = ({ room }) => {
       <div className="relative flex items-center justify-center w-full h-64 overflow-hidden">
         <motion.img
           key={imageIndex}
-          src={baseUrlImage+images[imageIndex].image}
+          src={getImageSrc(images[imageIndex].image)}
           alt={`Image ${imageIndex + 1}`}
           className="w-full h-full object-cover rounded-lg shadow-lg"
           initial={{ opacity: 0, x: 50 }}

@@ -16,6 +16,7 @@ import DetailReservation from './pages/users/DetailReservation';
 import EditReservation from './pages/users/EditReservation';
 import Dasboard from './pages/admin/Dasboard';
 import EditUser from './pages/users/EditUser';
+import FavoriteRoom from './pages/users/FavoriteRoom';
 
 const queryClient = new QueryClient();
 function App() {
@@ -39,6 +40,7 @@ function App() {
                   <Route path="/moncompte/editReservation" element={<EditReservation/>}/>
                   <Route path="/admin/Dashboard" element={<Dasboard/>}/>
                   <Route path="/moncompte/editUser" element={<EditUser/>}/>
+                  <Route path="/mesFavoris" element={<FavoriteRoom/>}/>
               </Route>
             </Route>
           </Routes>

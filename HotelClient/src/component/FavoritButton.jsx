@@ -7,7 +7,7 @@ export default function FavoritButton({ roomId, isFavorited, onToggle }) {
         try{
             const response =  axios.post("/favorites/",{ room: roomId } );
             console.log("response",response.data)
-            toast.success("Ajouté aux favoris !")
+            toast.info("Ajouté aux favoris !")
         }catch(error){
             console.log("error",error)
             toast.error("Erreur d'ajout aux favoris")
@@ -19,7 +19,7 @@ export default function FavoritButton({ roomId, isFavorited, onToggle }) {
         try{
             const response = await axios.delete(`/favorites/${roomId}/`);
             console.log("response",response.data)
-            toast.success("Retiré des favoris !")
+            toast.info("Retiré des favoris !")
         }catch(error){
             console.log("error",error)
             toast.error("Erreur de suppression des favoris")

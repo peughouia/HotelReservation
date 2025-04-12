@@ -1,5 +1,4 @@
 from io import BytesIO
-
 import qrcode
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
@@ -11,18 +10,39 @@ from reportlab.lib.utils import ImageReader
 from reportlab.pdfgen import canvas
 from reportlab.platypus import Table, TableStyle
 from rest_framework import status, generics
-from rest_framework.generics import GenericAPIView, RetrieveAPIView
+from rest_framework.generics import GenericAPIView, RetrieveAPIView, ListAPIView
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from Account.models import CustomUser, Category, Room, Reservation, Review, Comment, Favorite
-from Account.serializers import UserRegistrationSerialiser, CustomUserSerializer, UserLoginSerializer, \
-    PasswordChangeSerializer, PasswordResetSerializer, PasswordResetConfirmSerializer, CategorySerializer, \
-    RoomSerializer, ReservationSerializer, ReviewSerializer, CommentSerializer, CommentsSerializer, \
-    ReservationsSerializer, DetailReservationSerializer, FavoriteSerializer
+from Account.models import (
+    CustomUser,
+    Category,
+    Room,
+    Reservation,
+    Review,
+    Comment,
+    Favorite,
+)
+from Account.serializers import (
+    UserRegistrationSerialiser,
+    CustomUserSerializer,
+    UserLoginSerializer,
+    PasswordChangeSerializer,
+    PasswordResetSerializer,
+    PasswordResetConfirmSerializer,
+    CategorySerializer,
+    RoomSerializer,
+    ReservationSerializer,
+    ReviewSerializer,
+    CommentSerializer,
+    CommentsSerializer,
+    ReservationsSerializer,
+    DetailReservationSerializer,
+    FavoriteSerializer,
+)
 
 
 # Create your views here.
@@ -47,7 +67,7 @@ class UserRegistrationAPIView(GenericAPIView):
         data["tokens"] = {
             "message": "Utilisateur créé avec succès",
             "refresh": str(token),
-            "access": str(token.access_token)
+            "access": str(token.access_token),
         }
         return Response(data, status=status.HTTP_201_CREATED)
 
@@ -79,10 +99,10 @@ class UserLogoutAPIView(APIView):
             refresh_token = request.data["refresh"]
             token = RefreshToken(refresh_token)
             token.blacklist()
-            content = {'message': 'user deconnecté'}
+            content = {"message": "user deconnecté"}
             return Response(content, status=status.HTTP_205_RESET_CONTENT)
         except Exception as e:
-            content = {'message': f'{e}'}
+            content = {"message": f"{e}"}
             return Response(content, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -97,7 +117,9 @@ class UsersAPIView(APIView):
     def delete(self, request, pk):
         user = get_object_or_404(CustomUser, pk=pk)
         user.delete()
-        return Response({"message": "user supprimé avec succès"}, status=status.HTTP_204_NO_CONTENT)
+        return Response(
+            {"message": "user supprimé avec succès"}, status=status.HTTP_204_NO_CONTENT
+        )
 
     def patch(self, request):
         # Pour des mises à jour partielles
@@ -114,12 +136,17 @@ class PasswordChangeAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
     def put(self, request, *args, **kwargs):
-        serializer = PasswordChangeSerializer(data=request.data, context={'request': request})
+        serializer = PasswordChangeSerializer(
+            data=request.data, context={"request": request}
+        )
         if serializer.is_valid():
             # Met à jour le mot de passe de l'utilisateur
-            request.user.set_password(serializer.validated_data['new_password1'])
+            request.user.set_password(serializer.validated_data["new_password1"])
             request.user.save()
-            return Response({"message": "Mot de passe mis à jour avec succès."}, status=status.HTTP_200_OK)
+            return Response(
+                {"message": "Mot de passe mis à jour avec succès."},
+                status=status.HTTP_200_OK,
+            )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -128,7 +155,9 @@ class PasswordResetAPIView(APIView):
         serializer = PasswordResetSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
-            return Response({"message": "E-mail envoyé avec succès."}, status=status.HTTP_200_OK)
+            return Response(
+                {"message": "E-mail envoyé avec succès."}, status=status.HTTP_200_OK
+            )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -137,13 +166,16 @@ class PasswordResetConfirmAPIView(APIView):
         data = {
             "uid": uid,
             "token": token,
-            "new_password": request.data.get("new_password")
+            "new_password": request.data.get("new_password"),
         }
 
         serializer = PasswordResetConfirmSerializer(data=data)
         if serializer.is_valid():
             serializer.save()
-            return Response({"message": "Mot de passe mis à jour avec succès."}, status=status.HTTP_200_OK)
+            return Response(
+                {"message": "Mot de passe mis à jour avec succès."},
+                status=status.HTTP_200_OK,
+            )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -152,7 +184,9 @@ class AddCategoryAPIView(APIView):
         serializer = CategorySerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
-            return Response({"success": "Nouvelle categorie ajouté"}, status=status.HTTP_200_OK)
+            return Response(
+                {"success": "Nouvelle categorie ajouté"}, status=status.HTTP_200_OK
+            )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def get(self, request):
@@ -165,7 +199,7 @@ class RoomCreateAPIView(APIView):
     parser_classes = (MultiPartParser, FormParser)
 
     def post(self, request, *args, **kwargs):
-        serializer = RoomSerializer(data=request.data, context={'request': request})
+        serializer = RoomSerializer(data=request.data, context={"request": request})
         if serializer.is_valid():
             room = serializer.save()
             return Response(RoomSerializer(room).data, status=status.HTTP_201_CREATED)
@@ -191,9 +225,14 @@ class RoomAPIView(APIView):
         try:
             room = get_object_or_404(Room, slug=slug)
             room.delete()
-            return Response({"success": "Chambre supprimé avec succès"}, status=status.HTTP_204_NO_CONTENT)
+            return Response(
+                {"success": "Chambre supprimé avec succès"},
+                status=status.HTTP_204_NO_CONTENT,
+            )
         except:
-            return Response({"error": "Chambre non trouvée"}, status=status.HTTP_404_NOT_FOUND)
+            return Response(
+                {"error": "Chambre non trouvée"}, status=status.HTTP_404_NOT_FOUND
+            )
 
     def get(self, request, slug):
         try:
@@ -201,7 +240,9 @@ class RoomAPIView(APIView):
             serializer = RoomSerializer(room)
             return Response(serializer.data, status=status.HTTP_200_OK)
         except:
-            return Response({"error": "Chambre non trouvée"}, status=status.HTTP_404_NOT_FOUND)
+            return Response(
+                {"error": "Chambre non trouvée"}, status=status.HTTP_404_NOT_FOUND
+            )
 
 
 class CreateReservationView(APIView):
@@ -213,8 +254,8 @@ class CreateReservationView(APIView):
         user = request.user
 
         data = request.data.copy()
-        data['user'] = user.id
-        data['room'] = room.id
+        data["user"] = user.id
+        data["room"] = room.id
         serializer = ReservationsSerializer(data=data)
         print(data)
         if serializer.is_valid():
@@ -224,7 +265,7 @@ class CreateReservationView(APIView):
             if check_out < check_in:
                 return Response(
                     {"error": "la date d'entrée doit être avant la date de sorti"},
-                    status=status.HTTP_400_BAD_REQUEST
+                    status=status.HTTP_400_BAD_REQUEST,
                 )
 
             # Vérifier les conflits de réservation
@@ -232,13 +273,13 @@ class CreateReservationView(APIView):
                 room=room,
                 check_in__lt=check_out,
                 check_out__gt=check_in,
-                status__in=["pending", "confirmed"]
+                status__in=["pending", "confirmed"],
             )
 
             if conflicts.exists():
                 return Response(
                     {"error": "une réservation est déjà pour cette interval de dates."},
-                    status=status.HTTP_400_BAD_REQUEST
+                    status=status.HTTP_400_BAD_REQUEST,
                 )
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -251,35 +292,46 @@ class CreateReservationView(APIView):
         reservation_id = request.data.get("id")
 
         if not reservation_id:
-            return Response({"error": "ID de réservation manquant"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"error": "ID de réservation manquant"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
         reservation = get_object_or_404(Reservation, id=reservation_id, user=user)
 
         data = request.data.copy()
-        data['room'] = room.id
-        data['user'] = user.id
+        data["room"] = room.id
+        data["user"] = user.id
 
-        serializer = ReservationsSerializer(instance=reservation, data=data, partial=True)
+        serializer = ReservationsSerializer(
+            instance=reservation, data=data, partial=True
+        )
 
         if serializer.is_valid():
             check_in = serializer.validated_data.get("check_in", reservation.check_in)
-            check_out = serializer.validated_data.get("check_out", reservation.check_out)
+            check_out = serializer.validated_data.get(
+                "check_out", reservation.check_out
+            )
 
             if check_out < check_in:
-                return Response({"error": "La date d'entrée doit être avant la date de sortie"},
-                                status=status.HTTP_400_BAD_REQUEST)
+                return Response(
+                    {"error": "La date d'entrée doit être avant la date de sortie"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
 
             # Vérifie les conflits sauf la réservation elle-même
             conflicts = Reservation.objects.filter(
                 room=room,
                 check_in__lt=check_out,
                 check_out__gt=check_in,
-                status__in=["pending", "confirmed"]
+                status__in=["pending", "confirmed"],
             ).exclude(id=reservation.id)
 
             if conflicts.exists():
-                return Response({"error": "Conflit avec une autre réservation sur ces dates."},
-                                status=status.HTTP_400_BAD_REQUEST)
+                return Response(
+                    {"error": "Conflit avec une autre réservation sur ces dates."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
 
             serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
@@ -290,9 +342,14 @@ class CreateReservationView(APIView):
         try:
             reservation = Reservation.objects.get(slug=slug)
             reservation.delete()
-            return Response({'success': 'suppression'}, status=status.HTTP_204_NO_CONTENT)
+            return Response(
+                {"success": "suppression"}, status=status.HTTP_204_NO_CONTENT
+            )
         except Exception as e:
-            return Response({'erreur': f'Erreur lors de la suppression : {str(e)}'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"erreur": f"Erreur lors de la suppression : {str(e)}"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
 
 class GetAllReservation(APIView):
@@ -313,9 +370,15 @@ class CancelReservationView(APIView):
             reservation.status = "cancelled"
             reservation.completed = "cancelled"
             reservation.save()
-            return Response({"success": "Réservation annulée avec succès."}, status=status.HTTP_200_OK)
+            return Response(
+                {"success": "Réservation annulée avec succès."},
+                status=status.HTTP_200_OK,
+            )
         except Reservation.DoesNotExist:
-            return Response({"error": "Réservation introuvable ou déjà confirmée."}, status=status.HTTP_404_NOT_FOUND)
+            return Response(
+                {"error": "Réservation introuvable ou déjà confirmée."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
 
 
 class ConfirmReservationView(APIView):
@@ -331,9 +394,15 @@ class ConfirmReservationView(APIView):
                 reservation.room.is_available = False
                 reservation.room.save()
 
-            return Response({"message": "Réservation confirmée avec succès."}, status=status.HTTP_200_OK)
+            return Response(
+                {"message": "Réservation confirmée avec succès."},
+                status=status.HTTP_200_OK,
+            )
         except Reservation.DoesNotExist:
-            return Response({"error": "Réservation introuvable ou déjà traitée."}, status=status.HTTP_404_NOT_FOUND)
+            return Response(
+                {"error": "Réservation introuvable ou déjà traitée."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
 
 
 class CompleteReservationView(APIView):
@@ -341,14 +410,22 @@ class CompleteReservationView(APIView):
 
     def post(self, request, slug):
         try:
-            reservation = Reservation.objects.get(slug=slug, status="confirmed", check_out__lte=now().date())
+            reservation = Reservation.objects.get(
+                slug=slug, status="confirmed", check_out__lte=now().date()
+            )
             reservation.status = "completed"
             reservation.room.is_available = True
             reservation.room.save()
             reservation.save()
-            return Response({"message": "Réservation complétée avec succès."}, status=status.HTTP_200_OK)
+            return Response(
+                {"message": "Réservation complétée avec succès."},
+                status=status.HTTP_200_OK,
+            )
         except Reservation.DoesNotExist:
-            return Response({"error": "Réservation introuvable ou non confirmée."}, status=status.HTTP_404_NOT_FOUND)
+            return Response(
+                {"error": "Réservation introuvable ou non confirmée."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
 
 
 class HistoriqueReservationAPIView(APIView):
@@ -381,28 +458,37 @@ class ReviewAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request, slug):
-        """ Récupérer les notes pour une chambre spécifique """
+        """Récupérer les notes pour une chambre spécifique"""
         try:
             room = Room.objects.get(slug=slug)
             reviews = Review.objects.filter(room=room)
             serializer = ReviewSerializer(reviews, many=True)
             return Response(serializer.data, status=status.HTTP_200_OK)
         except:
-            return Response({"erreur": "cette chambre n'existe pas "}, status=status.HTTP_404_NOT_FOUND)
+            return Response(
+                {"erreur": "cette chambre n'existe pas "},
+                status=status.HTTP_404_NOT_FOUND,
+            )
 
     def post(self, request, slug):
         try:
-            """ Ajouter une note si l'utilisateur a séjourné dans la chambre """
+            """Ajouter une note si l'utilisateur a séjourné dans la chambre"""
             room = Room.objects.get(slug=slug)
             user = request.user
 
-            if not Reservation.objects.filter(user=user, room=room, completed='completed').exists():
-                return Response({"error": "Vous devez avoir réservé cette chambre pour la noter..."},
-                                status=status.HTTP_403_FORBIDDEN)
+            if not Reservation.objects.filter(
+                user=user, room=room, completed="completed"
+            ).exists():
+                return Response(
+                    {
+                        "error": "Vous devez avoir réservé cette chambre pour la noter..."
+                    },
+                    status=status.HTTP_403_FORBIDDEN,
+                )
 
             data = request.data.copy()
-            data['user'] = user.id
-            data['room'] = room.id
+            data["user"] = user.id
+            data["room"] = room.id
             serializer = ReviewSerializer(data=data)
 
             if serializer.is_valid():
@@ -410,13 +496,16 @@ class ReviewAPIView(APIView):
                 return Response(serializer.data, status=status.HTTP_201_CREATED)
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         except:
-            return Response({'erreur': "cette chambre n'existe pas"}, status=status.HTTP_404_NOT_FOUND)
+            return Response(
+                {"erreur": "cette chambre n'existe pas"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
 
 
 class CommentAPIView(APIView):
     def get_permissions(self):
-        """ Définir des permissions différentes pour GET et POST """
-        if self.request.method == 'GET':
+        """Définir des permissions différentes pour GET et POST"""
+        if self.request.method == "GET":
             return [AllowAny()]  # Tout le monde peut voir les commentaires
         return [IsAuthenticated()]
 
@@ -431,17 +520,22 @@ class CommentAPIView(APIView):
             return Response({"error": "cette chambre n'exite pas"})
 
     def post(self, request, slug):
-
-        """ Ajouter un commentaire si l'utilisateur a réservé la chambre """
+        """Ajouter un commentaire si l'utilisateur a réservé la chambre"""
         room = Room.objects.get(slug=slug)
         user = request.user
-        if not Reservation.objects.filter(user=user, room=room, completed='completed').exists():
-            return Response({"error": "Vous devez avoir séjourné dans cette chambre pour commenter."},
-                            status=status.HTTP_403_FORBIDDEN)
+        if not Reservation.objects.filter(
+            user=user, room=room, completed="completed"
+        ).exists():
+            return Response(
+                {
+                    "error": "Vous devez avoir séjourné dans cette chambre pour commenter."
+                },
+                status=status.HTTP_403_FORBIDDEN,
+            )
 
         data = request.data.copy()
-        data['user'] = user.id
-        data['room'] = room.id
+        data["user"] = user.id
+        data["room"] = room.id
         serializer = CommentsSerializer(data=data)
 
         if serializer.is_valid():
@@ -466,21 +560,23 @@ class RoomAvailabilityAPIView(APIView):
         """Retourne les périodes déjà réservées pour une chambre"""
         try:
             room = Room.objects.get(slug=slug)
-            reservations = Reservation.objects.filter(room=room, status__in=['pending', 'confirmed']).values("check_in",
-                                                                                                             "check_out",
-                                                                                                             'status',
-                                                                                                             'id')
+            reservations = Reservation.objects.filter(
+                room=room, status__in=["pending", "confirmed"]
+            ).values("check_in", "check_out", "status", "id")
             return Response(reservations, status=status.HTTP_200_OK)
         except Room:
-            return Response({"error": "Chambre non trouvée"}, status=status.HTTP_404_NOT_FOUND)
+            return Response(
+                {"error": "Chambre non trouvée"}, status=status.HTTP_404_NOT_FOUND
+            )
 
 
 def generate_pdf(request, reservation_id):
     reservation = get_object_or_404(Reservation, id=reservation_id)
     # Définir la réponse HTTP en tant que fichier PDF
-    response = HttpResponse(content_type='application/pdf')
-    response[
-        'Content-Disposition'] = f'attachment; filename=f"recu_Room{reservation.room.category.name}_{reservation.room.room_number}.pdf"'
+    response = HttpResponse(content_type="application/pdf")
+    response["Content-Disposition"] = (
+        f'attachment; filename=f"recu_Room{reservation.room.category.name}_{reservation.room.room_number}.pdf"'
+    )
 
     # Créer un PDF avec ReportLap
 
@@ -493,7 +589,9 @@ def generate_pdf(request, reservation_id):
     logo_path = "Reservia.png"  # chemin du logo
     logo_width = 90
     logo_height = 90
-    pdf.drawImage(logo_path, 40, height - 100, width=logo_width, height=logo_height, mask='auto')
+    pdf.drawImage(
+        logo_path, 40, height - 100, width=logo_width, height=logo_height, mask="auto"
+    )
 
     # Titre après le logo
     pdf.setFont("Helvetica-Bold", 30)
@@ -509,8 +607,14 @@ def generate_pdf(request, reservation_id):
     line_gap = 50
 
     infos = [
-        ("NOM DU CLIENT:", f"{reservation.user.first_name} {reservation.user.last_name}"),
-        ("ADRESSE POSTALE:", reservation.user.addressPostal if reservation.user.addressPostal else "RAS"),
+        (
+            "NOM DU CLIENT:",
+            f"{reservation.user.first_name} {reservation.user.last_name}",
+        ),
+        (
+            "ADRESSE POSTALE:",
+            reservation.user.addressPostal if reservation.user.addressPostal else "RAS",
+        ),
         ("VILLE:", reservation.user.ville if reservation.user.ville else "RAS"),
         ("ADDRESS MAIL:", reservation.user.email),
         ("DATE D'ARRIVÉE:", f"{reservation.check_in.date()}"),
@@ -518,7 +622,10 @@ def generate_pdf(request, reservation_id):
     ]
 
     infos_right = [
-        ("N° DE REÇU:", f"rcpt {reservation.created_at.year}{reservation.room.room_number}{reservation.user.id}"),
+        (
+            "N° DE REÇU:",
+            f"rcpt {reservation.created_at.year}{reservation.room.room_number}{reservation.user.id}",
+        ),
         ("N° DE CHAMBRE:", reservation.room.room_number),
         ("CODE DE RÉDUCTION:", "SPRING15"),
         ("NUM TÉLÉPHONE:", reservation.user.phone),
@@ -539,19 +646,28 @@ def generate_pdf(request, reservation_id):
 
     data = [
         ["DATE DE FACTURATION", "DESCRIPTION", "QTÉ", "MONTANT/Nuit", "TOTAL"],
-        [f"{reservation.created_at.date()}", f"Chambre {reservation.room.category}", "1",
-         reservation.room.price_per_night, reservation.total_price],
+        [
+            f"{reservation.created_at.date()}",
+            f"Chambre {reservation.room.category}",
+            "1",
+            reservation.room.price_per_night,
+            reservation.total_price,
+        ],
     ]
 
     table = Table(data, colWidths=[140, 125, 55, 90, 80])
-    table.setStyle(TableStyle([
-        ("BACKGROUND", (0, 0), (-1, 0), colors.grey),
-        ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
-        ("ALIGN", (2, 1), (-1, -1), "CENTER"),
-        ("GRID", (0, 0), (-1, -1), 0.5, colors.black),
-        ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
-        ("FONTNAME", (0, 1), (-1, -1), "Helvetica"),
-    ]))
+    table.setStyle(
+        TableStyle(
+            [
+                ("BACKGROUND", (0, 0), (-1, 0), colors.grey),
+                ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
+                ("ALIGN", (2, 1), (-1, -1), "CENTER"),
+                ("GRID", (0, 0), (-1, -1), 0.5, colors.black),
+                ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+                ("FONTNAME", (0, 1), (-1, -1), "Helvetica"),
+            ]
+        )
+    )
     table.wrapOn(pdf, width, height)
     table.drawOn(pdf, 40, 300)
 
@@ -584,7 +700,9 @@ def generate_pdf(request, reservation_id):
     qr_image = ImageReader(qr_buffer)
 
     # Ajouter le QR Code au PDF
-    pdf.drawImage(qr_image, 460, height - 100, width=90, height=90)  # Position et taille du QR code
+    pdf.drawImage(
+        qr_image, 460, height - 100, width=90, height=90
+    )  # Position et taille du QR code
 
     pdf.setFont("Helvetica", 10)
     pdf.drawString(475, height - 105, "Scannez MOI")
@@ -593,9 +711,14 @@ def generate_pdf(request, reservation_id):
     pdf.setFillColor(colors.orange)
     pdf.drawCentredString(width / 2, 80, "Reservia")
     pdf.setFont("Helvetica", 9)
-    pdf.drawCentredString(width / 2, 65, "ADRESSE DE L’HÔTEL, VILLE, ÉTAT ET CODE POSTAL")
-    pdf.drawCentredString(width / 2, 50,
-                          "Tél: 321-456-7890 | e-mail: reservations@hotelname.com | site Web: hotelname.com")
+    pdf.drawCentredString(
+        width / 2, 65, "ADRESSE DE L’HÔTEL, VILLE, ÉTAT ET CODE POSTAL"
+    )
+    pdf.drawCentredString(
+        width / 2,
+        50,
+        "Tél: 321-456-7890 | e-mail: reservations@hotelname.com | site Web: hotelname.com",
+    )
 
     # Sauvegarder
     pdf.showPage()
@@ -618,7 +741,15 @@ class FavoriteListCreateAPIView(generics.ListCreateAPIView):
 class FavoriteDeleteAPIView(generics.DestroyAPIView):
     serializer_class = FavoriteSerializer
     permission_classes = [IsAuthenticated]
-    lookup_field = 'room_id'
+    lookup_field = "room_id"
 
     def get_queryset(self):
         return Favorite.objects.filter(user=self.request.user)
+
+
+class FavoriteRoomsListAPIView(ListAPIView):
+    serializer_class = RoomSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return Room.objects.filter(favorite__user=self.request.user)

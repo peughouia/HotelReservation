@@ -76,7 +76,7 @@ export default function Room_detail() {
       
 
 
-      if (!comments || !rooms || !images || images.length === 0) {
+      if (!comments || !rooms || !images ) {
         return <div className='w-full h-screen flex justify-center items-center'>
             <l-reuleaux
                 size="100"
@@ -111,7 +111,16 @@ export default function Room_detail() {
             </div>
             <div className="mt-2">
                 <p className='text-2xl font-bold'>Description</p>
-                <p className='text-justify leading-relaxed p-2'>{rooms.description}</p>
+                <p className='text-justify leading-relaxed p-2'>
+                    
+                    {rooms.category.description.split(';').map((item, index) => (
+                    <div className="mb-1" key={index}>{item.trim()}</div>
+                    ))}
+                </p>
+                    <p className='text-2xl font-bold'>Equipements</p>
+                    {rooms.description.split(';').map((item, index) => (
+                    <div className="mb-1" key={index}>{item.trim()}</div>
+                    ))}
             </div>
 
             <div className="mt-2 ">
@@ -160,10 +169,10 @@ export default function Room_detail() {
                                     <div className=" w-full text-sm text-gray-500 flex justify-end">{FormatDate(comment.created_at)}</div>
                                     </div>)
                                 :
-                                (<div className="flex flex-col w-full bg-red-500 bg-opacity-40 rounded-md p-2">
+                                (<div className="flex flex-col w-full bg-black bg-opacity-40 rounded-md text-white p-2">
                                     <span><b>{comment.user.first_name}</b></span>
                                     <p>{comment.comment}</p>
-                                    <div className=" w-full text-sm text-gray-500 flex justify-end">{FormatDate(comment.created_at)}</div>
+                                    <div className=" w-full text-sm text-white flex justify-end">{FormatDate(comment.created_at)}</div>
                                     </div>)
                               }
                                 

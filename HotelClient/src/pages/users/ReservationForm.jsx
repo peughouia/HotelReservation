@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import axios from '../../context/api';
-import { format } from "date-fns";
+import { addHours  } from "date-fns";
 import { toast } from 'react-toastify';
 import Modal from '../../component/modal';
 
@@ -52,12 +52,15 @@ export default function ReservationForm({roomSlug, existingReservation = null })
   };
 
   const handleConfirm = async () => {
-    const formattedCheckIn = format(checkIn, "yyyy-MM-dd");
-    const formattedCheckOut = format(checkOut, "yyyy-MM-dd");
-    const data = {
-      check_in: formattedCheckIn,
-      check_out: formattedCheckOut,
-    };
+        const adjustedCheckIn = addHours(checkIn, 1);
+        const adjustedCheckOut = new Date(checkOut);
+        adjustedCheckOut.setHours(adjustedCheckIn.getHours());
+        adjustedCheckOut.setMinutes(adjustedCheckIn.getMinutes());
+
+        const data = {
+          check_in: adjustedCheckIn.toISOString(),
+          check_out: adjustedCheckOut.toISOString(),
+        };
 
     try {
       if (existingReservation) {
@@ -94,9 +97,13 @@ export default function ReservationForm({roomSlug, existingReservation = null })
           onChange={(date) => setCheckIn(date)}
           minDate={new Date()}
           excludeDates={bookedDates}
-          dateFormat="yyyy-MM-dd"
+          showTimeSelect
+          dateFormat="Pp" 
           className="p-2 border rounded w-full"
-          placeholderText='Sélectionnez une date'
+          placeholderText='Selectionnez une date'
+          timeFormat="HH:mm" // Format de l'heure
+          timeIntervals={15} // Intervalles d’heure (par défaut : 30min)
+          timeCaption="Heure"
           required
         />
         <label className="block mt-4 mb-2 font-bold text-xl text-gray-500">Date de sortie</label>
@@ -122,7 +129,7 @@ export default function ReservationForm({roomSlug, existingReservation = null })
         title={existingReservation ? "Modifier la réservation" : "Confirmer la réservation"}
         message={`Voulez-vous vraiment ${
           existingReservation ? "modifier" : "réserver"
-        } la chambre du ${checkIn?.toLocaleDateString()} au ${checkOut?.toLocaleDateString()} ?`}
+        } la chambre du ${checkIn?.toLocaleDateString()} à ${checkIn?.getHours()}h au ${checkOut?.toLocaleDateString()} ?`}
       />
     </form>
   );

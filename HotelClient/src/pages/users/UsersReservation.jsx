@@ -6,7 +6,7 @@ import { FormatDate } from '../../component/FormatDate'
 
 export default function UsersReservation() {
     const {UserReservations, isLoading} = useAuth();
-    
+    console.log(UserReservations)
     if (isLoading) {
         return (<div className='w-full h-screen flex justify-center items-center'>
           <l-reuleaux
@@ -33,7 +33,7 @@ export default function UsersReservation() {
             return "bg-gray-500"; // Si jamais le statut est inconnu
         }
       };
-      console.log(UserReservations)
+      
       
     
   return (
@@ -44,7 +44,7 @@ export default function UsersReservation() {
         </Link>
         <div className='w-full'>
             <div className='p-2'>
-                {UserReservations>0?
+                {UserReservations?
                   (UserReservations.map((reservation, index) => (
                       <Link key={index} to={`/moncompte/detail/${reservation.slug}`} >
                       <div  className="bg-white shadow-md rounded-md p-4 w-full my-4">
