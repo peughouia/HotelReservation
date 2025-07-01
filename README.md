@@ -50,8 +50,8 @@
 ### Backend (Django)
 
 ```bash
-git clone https://github.com/ton-utilisateur/hotelbooking.git
-cd hotelbooking/backend
+git clone https://github.com/peughouia/HotelReservation.git
+cd Hotel/
 python -m venv venv
 source venv/bin/activate  # sous Windows : venv\Scripts\activate
 pip install -r requirements.txt
@@ -61,15 +61,13 @@ python manage.py runserver
 
 ### Frontend (React.js)
 ```bash
-cd ../frontend
+cd ../HotelClient
 npm install
 npm start
 ```
 
-
-
 - **structure :**
-- hotelbooking/
-  - backend/     → Projet Django (API, models, admin, etc.)
-  - frontend/    → Projet React.js (UI, services, pages)
+- HotelReservation/
+  - Hotel/     → Projet Django (API, models, admin, etc.)
+  - HotelClient/    → Projet React.js (UI, services, pages)
 
